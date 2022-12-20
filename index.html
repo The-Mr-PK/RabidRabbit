@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        canvas {
+            padding-left: 0;
+            padding-right: 0;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+            width: 1000px;
+        }
+
+        p {
+            text-align:center;
+            font-family:'Arial';
+            font-size: larger;
+            font-style: oblique;
+            font-weight: bold;
+        }
+    </style>
+    
+  <link rel="shortcut icon" type="image/x-icon" href="image/icon.ico" />
+</head>
+
+<body>
+
+
+    <canvas id="canvas" width="1000" height="600" style="border:1px white" tabindex="1"></canvas>
+
+
+    <script>
+
+        /*Peyton Kent
+         * Nov 29 - 
+         * A very fun game where you hunt rabid bunnies to protect your town
+         */
+
+
+
+
+        //----------- Variables --------------------
+
+
+        var ctx;
+        var WIDTH;
+        var HEIGHT;
+
+        const fps = 60;
+
+        var background = new Image();
+        background.src = "image/forest.jpg";
+
+        var score = 0;
+        var health = 3;
+        var heart = new Image();
+        heart.src = "image/heart.png";
+
+        var falling = [false];
+        var bunnySpeed = 5;
+        var bunnyX = [1000, 1200, 1400];
+        var bunnyY = [500, 485, 475];
+        var bunnyYMax = [500, 485, 475];
+        var bunny = new Image();
+        var bunnyFrame = [1, 1, 1];
+        bunny.src = "image/bunny1.png";
+        
+
+        var mousePos;
+
+        var reload = 0;
+        //-----------------------------------------
+
+        //Gets the mouse corodinates when the mouse is clicked
+        canvas.addEventListener("click", function (evt) {
+            mousePos = getMousePos(canvas, evt);
+
+            //Checks each bunny
+            for (bunnyNum = 0; bunnyNum < bunnyX.length; bunnyNum++) {
+                var height = bunny.height;
+                var width = bunny.width;
+
+                // Checks if mouse is within the hitbox of the bunny and if the user is currenty reloading
+                if (mousePos.x > bunnyX[bunnyNum] && mousePos.x < (bunnyX[bunnyNum] + width) && mousePos.y > bunnyY[bunnyNum] && mousePos.y < (bunnyY[bunnyNum] + width) && reload === 0) {
+                    score++; //Adds one point
+                    //Places bunny in random spot
+                    bunnyX[bunnyNum] = Math.floor(Math.random() * 600) + 1000;
+                    bunnyY[bunnyNum] = Math.floor(Math.random() * 100) + 350;
+                    bunnyYMax[bunnyNum] = bunnyY[bunnyNum];
+
+                    //Increases bunny speed every 10 points
+                    if (score % 10 === 0) {
+                        bunnySpeed += 0.25;
+                        //Adds a bunny every 25 points
+                        if (score % 50 === 0) {
+                            bunnyX.push(Math.floor(Math.random() * 600) + 1000);
+                            bunnyY.push(Math.floor(Math.random() * 125) + 350);
+                            bunnyYMax.push(bunnyY[bunnyY.length - 1]);
+                            console.log(bunnyYMax[bunnyY.length -1]);
+                            console.log(bunnyYMax.length);
+                        }
+                    }
+
+                    //If the cursor isn't on bunny's hitbox it moves it to the top cornor to prevent it from falsely triggering
+                } else if (bunnyNum === bunnyX.length) {
+                    mousePos.x = 0;
+                    mousePos.y = 0;
+                }
+            }
+            //Initiates reload 
+            reload = 15;
+
+            bunny.onload = function () {
+
+            }
+        }, false);
+
+        //Gets mouse corodinates from html
+        function getMousePos(canvas, evt) {
+            var rect = canvas.getBoundingClientRect();
+            return {
+                x: evt.clientX - rect.left,
+                y: evt.clientY - rect.top
+            };
+        }
+
+
+
+
+        //HTML stuff I don't understand
+        function init() {
+            ctx = document.getElementById('canvas').getContext('2d');
+            //attempt full screen
+            //ctx.canvas.width  = window.innerWidth;
+            //ctx.canvas.height = window.innerHeight;
+            WIDTH = ctx.canvas.width;
+            HEIGHT = ctx.canvas.height;
+
+            requestAnimationFrame(draw);
+        }
+
+
+        // Main game loop
+        function draw() {
+            clear();
+            ctx.drawImage(background, 0, 0);
+
+            console.log(bunnyX.length);
+
+            drawGUI();
+
+            for (var i = 0; i < bunnyX.length; i++) {
+                drawBunny(i);
+            }
+
+            setTimeout(() => {
+                requestAnimationFrame(draw);
+            }, 1000 / fps);
+        }
+
+        // GUI for game
+        function drawGUI() {
+            //Displaying score
+            ctx.fillText("Score: " + score, 30, 50);
+            ctx.font = "30px Times New Roman";
+
+            // If the user is reloading it changes the cursor to the css waiting cursor otherwise it changes it to the crosshair
+            if (reload > 0) {
+                document.getElementById('canvas').style.cursor = 'wait';
+                reload -= 0.5; //
+            } else {
+                document.getElementById('canvas').style.cursor = 'crosshair';
+            }
+            
+            //Draws the player's remaining health (hearts)
+            if(health >= 1){
+                ctx.drawImage(heart,30,70);
+            }if(health >=2){
+                ctx.drawImage(heart,80,70);
+            }if(health >=3){
+                ctx.drawImage(heart,130,70);
+            }
+            
+        }
+
+        // Handles everything to do with the bunnies
+        function drawBunny(bunnyNum) {
+
+
+            //Placing bunny on other side of screen when it goes off
+            if (bunnyX[bunnyNum] < -100) {
+                bunnyX[bunnyNum] = 1000;
+                //takes away one "life"
+                health--;
+                //If the player has no lives left the game ends
+                if (health === 0) {
+                    alert("Game Over! You reached a score of " + score);
+                    health = 3;
+                    score = 0;
+
+                    //Brings the number of bunnies back down to 3
+                    for (var a = bunnyX.length; a >= 3; a--) {
+                        bunnyX.pop();
+                        bunnyY.pop();
+                        bunnyYMax.pop();
+                    }
+
+                    //Resets the bunny's position and speed
+                    for (var i = bunnyX.length; i >= 0; i--) {
+                        bunnyX[i] = Math.floor(Math.random() * 600) + 1000;
+                        bunnyY[i] = Math.floor(Math.random() * 125) + 350;
+                        bunnyYMax[i] = bunnyY[bunnyNum];
+                        bunnySpeed = 5;
+                    }
+                    
+                }
+            } else {
+                bunnyX[bunnyNum] -= bunnySpeed; //Moves bunny across screen
+            }
+
+            //Making the bunny hop
+            if (bunnyY[bunnyNum] > bunnyYMax[bunnyNum] - 20 && falling[bunnyNum] === false) {
+                bunnyY[bunnyNum] -= bunnySpeed / 3;
+            } else {
+                falling[bunnyNum] = true;
+                bunnyY[bunnyNum] += bunnySpeed / 10;
+                if (bunnyY[bunnyNum] >= bunnyYMax[bunnyNum]) {
+                    falling[bunnyNum] = false;
+                }
+            }
+
+            //Changing the bunny's frame (animating it)
+            if (bunnyFrame[bunnyNum] < 4) {
+                bunnyFrame[bunnyNum] += bunnySpeed / 30;
+            } else {
+                bunnyFrame[bunnyNum] = 1;
+            }
+
+
+            //Displaying bunny
+            bunny.src = "image/bunny" + parseInt(bunnyFrame[bunnyNum]) + ".png";
+            ctx.drawImage(bunny, bunnyX[bunnyNum], bunnyY[bunnyNum]);
+        }
+
+        function clear() {
+            ctx.beginPath();
+            ctx.fillStyle = 'white';
+            ctx.closePath();
+        }
+
+
+
+
+        //force the title
+        document.title = "Rabid Rabbit";
+        //give the canvas focus
+        document.getElementById('canvas').focus();
+        //call the init function when the page loads
+        window.addEventListener("load", init, false);
+
+
+    </script>
+
+
+
+
+</body></html>
