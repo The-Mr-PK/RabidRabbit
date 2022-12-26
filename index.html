@@ -85,7 +85,7 @@
                 var width = bunny.width;
 
                 // Checks if mouse is within the hitbox of the bunny and if the user is currenty reloading
-                if (mousePos.x > bunnyX[bunnyNum] && mousePos.x < (bunnyX[bunnyNum] + width) && mousePos.y > bunnyY[bunnyNum] && mousePos.y < (bunnyY[bunnyNum] + width) && reload === 0) {
+                if (mousePos.x > bunnyX[bunnyNum] && mousePos.x < (bunnyX[bunnyNum] + width) && mousePos.y > bunnyY[bunnyNum] && mousePos.y < (bunnyY[bunnyNum] + width) && reload === 0 && bunnyFrame[bunnyNum]<5) {
                     score++; //Adds one point
                     //Changes bunny frame to explosion
                     bunnyFrame[bunnyNum] = 5;
