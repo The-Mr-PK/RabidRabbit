@@ -22,8 +22,8 @@
             font-weight: bold;
         }
     </style>
-    
-  <link rel="shortcut icon" type="image/x-icon" href="image/icon.ico" />
+
+    <link rel="shortcut icon" type="image/x-icon" href="image/icon.ico" />
 </head>
 
 <body>
@@ -67,11 +67,12 @@
         var bunny = new Image();
         var bunnyFrame = [1, 1, 1];
         bunny.src = "image/bunny1.png";
-        
 
         var mousePos;
 
         var reload = 0;
+
+
         //-----------------------------------------
 
         //Gets the mouse corodinates when the mouse is clicked
@@ -86,10 +87,8 @@
                 // Checks if mouse is within the hitbox of the bunny and if the user is currenty reloading
                 if (mousePos.x > bunnyX[bunnyNum] && mousePos.x < (bunnyX[bunnyNum] + width) && mousePos.y > bunnyY[bunnyNum] && mousePos.y < (bunnyY[bunnyNum] + width) && reload === 0) {
                     score++; //Adds one point
-                    //Places bunny in random spot
-                    bunnyX[bunnyNum] = Math.floor(Math.random() * 600) + 1000;
-                    bunnyY[bunnyNum] = Math.floor(Math.random() * 100) + 350;
-                    bunnyYMax[bunnyNum] = bunnyY[bunnyNum];
+                    //Changes bunny frame to explosion
+                    bunnyFrame[bunnyNum] = 5;
 
                     //Increases bunny speed every 10 points
                     if (score % 10 === 0) {
@@ -99,8 +98,7 @@
                             bunnyX.push(Math.floor(Math.random() * 600) + 1000);
                             bunnyY.push(Math.floor(Math.random() * 125) + 350);
                             bunnyYMax.push(bunnyY[bunnyY.length - 1]);
-                            console.log(bunnyYMax[bunnyY.length -1]);
-                            console.log(bunnyYMax.length);
+                            bunnyFrame.push(1);
                         }
                     }
 
@@ -130,7 +128,7 @@
 
 
 
-        //HTML stuff I don't understand
+
         function init() {
             ctx = document.getElementById('canvas').getContext('2d');
             //attempt full screen
@@ -159,6 +157,8 @@
             setTimeout(() => {
                 requestAnimationFrame(draw);
             }, 1000 / fps);
+
+
         }
 
         // GUI for game
@@ -174,21 +174,22 @@
             } else {
                 document.getElementById('canvas').style.cursor = 'crosshair';
             }
-            
+
             //Draws the player's remaining health (hearts)
-            if(health >= 1){
-                ctx.drawImage(heart,30,70);
-            }if(health >=2){
-                ctx.drawImage(heart,80,70);
-            }if(health >=3){
-                ctx.drawImage(heart,130,70);
+            if (health >= 1) {
+                ctx.drawImage(heart, 30, 70);
             }
-            
+            if (health >= 2) {
+                ctx.drawImage(heart, 80, 70);
+            }
+            if (health >= 3) {
+                ctx.drawImage(heart, 130, 70);
+            }
+
         }
 
         // Handles everything to do with the bunnies
         function drawBunny(bunnyNum) {
-
 
             //Placing bunny on other side of screen when it goes off
             if (bunnyX[bunnyNum] < -100) {
@@ -206,6 +207,7 @@
                         bunnyX.pop();
                         bunnyY.pop();
                         bunnyYMax.pop();
+                        bunnyFrame.pop();
                     }
 
                     //Resets the bunny's position and speed
@@ -215,9 +217,9 @@
                         bunnyYMax[i] = bunnyY[bunnyNum];
                         bunnySpeed = 5;
                     }
-                    
+
                 }
-            } else {
+            } else if (bunnyFrame[bunnyNum] < 5) {
                 bunnyX[bunnyNum] -= bunnySpeed; //Moves bunny across screen
             }
 
@@ -235,8 +237,16 @@
             //Changing the bunny's frame (animating it)
             if (bunnyFrame[bunnyNum] < 4) {
                 bunnyFrame[bunnyNum] += bunnySpeed / 30;
+            } else if (bunnyFrame[bunnyNum] > 4 && bunnyFrame[bunnyNum] < 5) {
+                bunnyFrame[bunnyNum] = 1; // resets animation
+            } else if (bunnyFrame[bunnyNum] >= 5 && bunnyFrame[bunnyNum] < 9) {
+                bunnyFrame[bunnyNum] += 0.2; // plays explosion animation
             } else {
+                //Places bunny in random spot
                 bunnyFrame[bunnyNum] = 1;
+                bunnyX[bunnyNum] = Math.floor(Math.random() * 600) + 1000;
+                bunnyY[bunnyNum] = Math.floor(Math.random() * 100) + 350;
+                bunnyYMax[bunnyNum] = bunnyY[bunnyNum];
             }
 
 
