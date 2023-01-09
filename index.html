@@ -87,11 +87,31 @@
         var spaceDown = false;
 
 
-        //-----------------------------------------
+        var music = document.createElement("AUDIO");
+        music.src = "sound/music.mp3";
+        music.loop = true;
+        music.volume = 0.6;
+        
+        var pop = document.createElement("AUDIO");
+        pop.src = "sound/pop.mp3";
+        
+        var loseAudio = document.createElement("AUDIO");
+        loseAudio.src = "sound/lose.mp3";
+        var played = false;
+        
+        var oofAudio = document.createElement("AUDIO");
+        oofAudio.src = "sound/oof.mp3";
 
-        //Gets the mouse corodinates when the mouse is clicked
+
+        //-----------------------------------------
+       
+       
+       
+     //Gets the mouse corodinates when the mouse is clicked
         canvas.addEventListener("click", function (evt) {
             mousePos = getMousePos(canvas, evt);
+                    music.play();
+
 
             //Checks each bunny
             for (bunnyNum = 0; bunnyNum < bunnyX.length; bunnyNum++) {
@@ -103,6 +123,8 @@
                     score++; //Adds one point
                     //Changes bunny frame to explosion
                     bunnyFrame[bunnyNum] = 5;
+                    
+                    pop.play(); //plays sfx
 
                     //Increases bunny speed every 10 points
                     if (score % 10 === 0) {
@@ -197,6 +219,7 @@
             ctx.drawImage(background, 0, 0);
 
             //Displaying score
+            ctx.fillStyle = "black";
             ctx.font = "30px Times New Roman";
             ctx.fillText("Score: " + score, 30, 50);
 
@@ -229,6 +252,7 @@
                 bunnyX[bunnyNum] = 1000;
                 //takes away one "life"
                 health--;
+                oofAudio.play();
 
                 // ** If the player has no lives left the game ends **
 
@@ -240,7 +264,6 @@
             }
 
 
-            console.log("Bunny" + bunnyNum + "   " + falling[bunnyNum] + "    " + bunnyY[bunnyNum] + "    " + bunnyYMax[bunnyNum]);
             //Making the bunny hop
             if (bunnyY[bunnyNum] > (bunnyYMax[bunnyNum] - 20) && falling[bunnyNum] === false) {
                 bunnyY[bunnyNum] -= bunnySpeed / 3;
@@ -274,17 +297,31 @@
         }
 
 
+        //End of game GUI
         function endGUI() {
+            //Background
             ctx.drawImage(endImg, 0, 0);
+            //Displays score
             ctx.font = "25px Brush Script MT";
             ctx.fillStyle = 'white';
             ctx.fillText(score, 255, 340);
+            
+            //Stops music and plays loseing sound
+            music.pause();
+            if (played === false){
+            loseAudio.play();
+            played = true;
+        }
 
             //restarts the game if spacebar is pressed
             if (spaceDown) {
                 game = true;
                 health = 3;
                 score = 0;
+                
+                //plays music
+                music.play();
+                played = false;
 
                 //Brings the number of bunnies back down to 3
                 for (var a = bunnyX.length; a >= 3; a--) {
