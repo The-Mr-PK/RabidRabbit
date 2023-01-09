@@ -35,8 +35,8 @@
     <script>
 
         /*Peyton Kent
-         * Nov 29 - 
-         * A very fun game where you hunt rabid bunnies to protect your town
+         * Nov 29 - Jan 09
+         * A very fun game where you hunt rabid bunnies to protect your town which is seen just beyond the screen
          */
 
 
@@ -54,23 +54,37 @@
         var background = new Image();
         background.src = "image/forest.jpg";
 
+        var game = true;
+
         var score = 0;
         var health = 3;
         var heart = new Image();
         heart.src = "image/heart.png";
 
-        var falling = [false];
+        var falling = [false, false, false];
         var bunnySpeed = 5;
         var bunnyX = [1000, 1200, 1400];
         var bunnyY = [500, 485, 475];
         var bunnyYMax = [500, 485, 475];
-        var bunny = new Image();
         var bunnyFrame = [1, 1, 1];
-        bunny.src = "image/bunny1.png";
+
+        var endImg = new Image();
+        endImg.src = "image/end.png";
+
+        var imageList = []; //Creates a list to hold bunny images
+
+        //Loop that adds the bunny images to the list
+        for (var a = 1; a <= 9; a++) {
+            var imageTemp = new Image();
+            imageTemp.src = "image/bunny" + a + ".png";
+            imageList.push(imageTemp);
+        }
 
         var mousePos;
 
         var reload = 0;
+
+        var spaceDown = false;
 
 
         //-----------------------------------------
@@ -81,11 +95,11 @@
 
             //Checks each bunny
             for (bunnyNum = 0; bunnyNum < bunnyX.length; bunnyNum++) {
-                var height = bunny.height;
-                var width = bunny.width;
+                var height = imageList[parseInt(bunnyFrame[bunnyNum] - 1)].height;
+                var width = imageList[parseInt(bunnyFrame[bunnyNum] - 1)].width;
 
                 // Checks if mouse is within the hitbox of the bunny and if the user is currenty reloading
-                if (mousePos.x > bunnyX[bunnyNum] && mousePos.x < (bunnyX[bunnyNum] + width) && mousePos.y > bunnyY[bunnyNum] && mousePos.y < (bunnyY[bunnyNum] + width) && reload === 0 && bunnyFrame[bunnyNum]<5) {
+                if (mousePos.x > bunnyX[bunnyNum] && mousePos.x < (bunnyX[bunnyNum] + width) && mousePos.y > bunnyY[bunnyNum] && mousePos.y < (bunnyY[bunnyNum] + width) && reload === 0 && bunnyFrame[bunnyNum] < 5) {
                     score++; //Adds one point
                     //Changes bunny frame to explosion
                     bunnyFrame[bunnyNum] = 5;
@@ -99,6 +113,7 @@
                             bunnyY.push(Math.floor(Math.random() * 125) + 350);
                             bunnyYMax.push(bunnyY[bunnyY.length - 1]);
                             bunnyFrame.push(1);
+                            falling.push(false);
                         }
                     }
 
@@ -109,11 +124,11 @@
                 }
             }
             //Initiates reload 
-            reload = 15;
-
-            bunny.onload = function () {
-
+            if (reload === 0) {
+                reload = 15;
             }
+
+
         }, false);
 
         //Gets mouse corodinates from html
@@ -126,7 +141,19 @@
         }
 
 
+        //Detects when a the space bar is pressed
+        document.addEventListener('keydown', (event) => {
+            if (event.code === "Space") {
+                spaceDown = true;
+            }
+        });
 
+        //Detects when space bar is released
+        document.addEventListener('keyup', (event) => {
+            if (event.code === "Space") {
+                spaceDown = false;
+            }
+        });
 
 
         function init() {
@@ -143,15 +170,20 @@
 
         // Main game loop
         function draw() {
-            clear();
-            ctx.drawImage(background, 0, 0);
 
-            drawGUI();
 
-            for (var i = 0; i < bunnyX.length; i++) {
-                drawBunny(i);
+            // Displays game GUI and bunnies if game is true
+            if (game) {
+                gameGUI();
+
+                for (var i = 0; i < bunnyX.length; i++) {
+                    drawBunny(i);
+                }
+            } else {
+                endGUI(); // Displays end GUI if game isn't true
             }
 
+            //Limits game to 60 fps
             setTimeout(() => {
                 requestAnimationFrame(draw);
             }, 1000 / fps);
@@ -160,10 +192,13 @@
         }
 
         // GUI for game
-        function drawGUI() {
+        function gameGUI() {
+            //Displays background
+            ctx.drawImage(background, 0, 0);
+
             //Displaying score
-            ctx.fillText("Score: " + score, 30, 50);
             ctx.font = "30px Times New Roman";
+            ctx.fillText("Score: " + score, 30, 50);
 
             // If the user is reloading it changes the cursor to the css waiting cursor otherwise it changes it to the crosshair
             if (reload > 0) {
@@ -194,35 +229,20 @@
                 bunnyX[bunnyNum] = 1000;
                 //takes away one "life"
                 health--;
-                //If the player has no lives left the game ends
+
+                // ** If the player has no lives left the game ends **
+
                 if (health === 0) {
-                    alert("Game Over! You reached a score of " + score);
-                    health = 3;
-                    score = 0;
-
-                    //Brings the number of bunnies back down to 3
-                    for (var a = bunnyX.length; a >= 3; a--) {
-                        bunnyX.pop();
-                        bunnyY.pop();
-                        bunnyYMax.pop();
-                        bunnyFrame.pop();
-                    }
-
-                    //Resets the bunny's position and speed
-                    for (var i = bunnyX.length; i >= 0; i--) {
-                        bunnyX[i] = Math.floor(Math.random() * 600) + 1000;
-                        bunnyY[i] = Math.floor(Math.random() * 125) + 350;
-                        bunnyYMax[i] = bunnyY[bunnyNum];
-                        bunnySpeed = 5;
-                    }
-
+                    game = false;
                 }
             } else if (bunnyFrame[bunnyNum] < 5) {
                 bunnyX[bunnyNum] -= bunnySpeed; //Moves bunny across screen
             }
 
+
+            console.log("Bunny" + bunnyNum + "   " + falling[bunnyNum] + "    " + bunnyY[bunnyNum] + "    " + bunnyYMax[bunnyNum]);
             //Making the bunny hop
-            if (bunnyY[bunnyNum] > bunnyYMax[bunnyNum] - 20 && falling[bunnyNum] === false) {
+            if (bunnyY[bunnyNum] > (bunnyYMax[bunnyNum] - 20) && falling[bunnyNum] === false) {
                 bunnyY[bunnyNum] -= bunnySpeed / 3;
             } else {
                 falling[bunnyNum] = true;
@@ -233,7 +253,7 @@
             }
 
             //Changing the bunny's frame (animating it)
-            if (bunnyFrame[bunnyNum] < 4) {
+            if (bunnyFrame[bunnyNum] <= 4) {
                 bunnyFrame[bunnyNum] += bunnySpeed / 30;
             } else if (bunnyFrame[bunnyNum] > 4 && bunnyFrame[bunnyNum] < 5) {
                 bunnyFrame[bunnyNum] = 1; // resets animation
@@ -245,22 +265,46 @@
                 bunnyX[bunnyNum] = Math.floor(Math.random() * 600) + 1000;
                 bunnyY[bunnyNum] = Math.floor(Math.random() * 100) + 350;
                 bunnyYMax[bunnyNum] = bunnyY[bunnyNum];
+                falling[bunnyNum] = false;
             }
 
 
-            //Displaying bunny
-            bunny.src = "image/bunny" + parseInt(bunnyFrame[bunnyNum]) + ".png";
-            ctx.drawImage(bunny, bunnyX[bunnyNum], bunnyY[bunnyNum]);
+            //Displaying bunny 
+            ctx.drawImage(imageList[parseInt(bunnyFrame[bunnyNum] - 1)], bunnyX[bunnyNum], bunnyY[bunnyNum]);
         }
 
-        function clear() {
-            ctx.beginPath();
+
+        function endGUI() {
+            ctx.drawImage(endImg, 0, 0);
+            ctx.font = "25px Brush Script MT";
             ctx.fillStyle = 'white';
-            ctx.closePath();
+            ctx.fillText(score, 255, 340);
+
+            //restarts the game if spacebar is pressed
+            if (spaceDown) {
+                game = true;
+                health = 3;
+                score = 0;
+
+                //Brings the number of bunnies back down to 3
+                for (var a = bunnyX.length; a >= 3; a--) {
+                    bunnyX.pop();
+                    bunnyY.pop();
+                    bunnyYMax.pop();
+                    bunnyFrame.pop();
+                    falling.pop();
+                }
+
+                //Resets the bunny's position and speed
+                for (var i = bunnyX.length; i >= 0; i--) {
+                    bunnyX[i] = Math.floor(Math.random() * 600) + 1000;
+                    bunnyY[i] = Math.floor(Math.random() * 125) + 350;
+                    bunnyYMax[i] = bunnyY[i];
+                    falling[i] = false;
+                    bunnySpeed = 5;
+                }
+            }
         }
-
-
-
 
         //force the title
         document.title = "Rabid Rabbit";
